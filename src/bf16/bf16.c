@@ -18,11 +18,76 @@ static inline uint32_t normalize_significand(uint32_t fraction, int *exponent)
         return 128u + fraction;
 
     *exponent = 1;
-    while (fraction < 128u) {
+    if (fraction < 16u) {
+        fraction <<= 4;
+        *exponent -= 4;
+    }
+    if (fraction < 64u) {
+        fraction <<= 2;
+        *exponent -= 2;
+    }
+    if (fraction < 128u) {
         fraction <<= 1;
         --(*exponent);
     }
     return fraction;
+}
+
+/* Both significands are in [128, 255]; bit 7 always contributes. */
+static inline uint32_t multiply_significands(uint32_t a, uint32_t b)
+{
+    uint32_t product = a << 7;
+    b &= 0x7Fu;
+
+    // bit 0
+    if (!b)
+        return product;
+    if (b & 1u)
+        product += a;
+
+    // bit 1
+    if (!(b >>= 1))
+        return product;
+    a <<= 1;
+    if (b & 1u)
+        product += a;
+
+    // bit 2
+    if (!(b >>= 1))
+        return product;
+    a <<= 1;
+    if (b & 1u)
+        product += a;
+
+    // bit 3
+    if (!(b >>= 1))
+        return product;
+    a <<= 1;
+    if (b & 1u)
+        product += a;
+
+    // bit 4
+    if (!(b >>= 1))
+        return product;
+    a <<= 1;
+    if (b & 1u)
+        product += a;
+
+    // bit 5
+    if (!(b >>= 1))
+        return product;
+    a <<= 1;
+    if (b & 1u)
+        product += a;
+
+    // bit 6
+    if (!(b >>= 1))
+        return product;
+    a <<= 1;
+    if (b & 1u)
+        product += a;
+
+    return product;
 }
 
 uint16_t bf16_mul(uint16_t a, uint16_t b)
@@ -50,7 +115,7 @@ uint16_t bf16_mul(uint16_t a, uint16_t b)
     uint32_t sig_a = normalize_significand(abs_a & 0x7Fu, &exp_a);
     uint32_t sig_b = normalize_significand(abs_b & 0x7Fu, &exp_b);
 
-    uint32_t product = sig_a * sig_b;
+    uint32_t product = multiply_significands(sig_a, sig_b);
     int exponent = exp_a + exp_b - 127;
 
     if (product >= 0x8000u) {
@@ -68,6 +133,39 @@ uint16_t bf16_mul(uint16_t a, uint16_t b)
         return (uint16_t) (sign | (fraction >> (1 - exponent)));
 
     return (uint16_t) (sign | ((uint32_t) exponent << 7) | fraction);
+}
+
+/* For 128 <= m <= 510, sqrt(n) has its high bit (128) set. */
+static inline uint32_t sqrt_significand(uint32_t m)
+{
+    uint32_t n = ((m + 1u) << 7) - 1u;
+    uint32_t remainder = n - (1u << 14);
+    uint32_t partial = 1u << 14;
+
+/* Restoring integer square root, starting after the known first bit. */
+#define SQRT_STEP(bit)                            \
+    do {                                          \
+        uint32_t trial = partial + (bit);         \
+        partial >>= 1;                            \
+        /* remainder < trial RV32I sltu */        \
+        /* (1)，1 - 1 = 0x00000000 (no update) */ \
+        /* (0)，0 - 1 = 0xFFFFFFFF (update) */    \
+        uint32_t mask = (remainder < trial) - 1u; \
+        remainder -= trial & mask;                \
+        partial += (bit) & mask;                  \
+    } while (0)
+
+    /* unroll */
+    SQRT_STEP(1u << 12);
+    SQRT_STEP(1u << 10);
+    SQRT_STEP(1u << 8);
+    SQRT_STEP(1u << 6);
+    SQRT_STEP(1u << 4);
+    SQRT_STEP(1u << 2);
+    SQRT_STEP(1u << 0);
+
+#undef SQRT_STEP
+    return partial;
 }
 
 uint16_t bf16_sqrt(uint16_t a)
@@ -91,19 +189,7 @@ uint16_t bf16_sqrt(uint16_t a)
     if ((exponent & 1u) == 0)
         m <<= 1;
 
-    uint32_t low = 90;
-    uint32_t high = 256;
-    uint32_t root = 128;
-
-    while (low <= high) {
-        uint32_t mid = (low + high) >> 1;
-        if (((mid * mid) >> 7) <= m) {
-            root = mid;
-            low = mid + 1;
-        } else {
-            high = mid - 1;
-        }
-    }
+    uint32_t root = sqrt_significand(m);
 
     uint32_t result_exp = (exponent + 127u) >> 1;
     return (uint16_t) ((result_exp << 7) | (root - 128u));
