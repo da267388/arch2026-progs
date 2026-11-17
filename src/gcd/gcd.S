@@ -18,12 +18,12 @@ gcd_u32_asm:
     # t0 = shift
     li      t0, 0
 
-    # mask
-    lui     t1, 0x10
-    addi    t1, t1, -1 # t1 = 0xFFFF
-
     or      t2, a0, a1 # t2 = a | b
-    and     t3, t2, t1
+    # odd pass
+    andi    t3, t2, 0x1
+    bnez    t3, ctz_a_or_b_end
+
+    slli    t3, t2, 16
     bnez    t3, ctz_a_or_b_1
     addi    t0, t0, 16
     srli    t2, t2, 16
@@ -49,7 +49,10 @@ ctz_a_or_b_4:
 
 ctz_a_or_b_end:
 
-    and     t3, a0, t1
+    andi    t3, a0, 0x1
+    bnez    t3, ctz_a_end
+
+    slli    t3, a0, 16
     bnez    t3, ctz_a_1
     srli    a0, a0, 16
 ctz_a_1:
@@ -66,11 +69,16 @@ ctz_a_3:
     srli    a0, a0, 2
 ctz_a_4:
     andi    t3, a0, 0x1
-    bnez    t3, loop
+    bnez    t3, ctz_a_end
     srli    a0, a0, 1
 
+ctz_a_end:
+    andi    t3, a1, 0x1
+    bnez    t3, ctz_b_end
+
 loop:
-    and     t3, a1, t1
+
+    slli    t3, a1, 16
     bnez    t3, ctz_b_1
     srli    a1, a1, 16
 ctz_b_1:
@@ -91,14 +99,13 @@ ctz_b_4:
     srli    a1, a1, 1
 
 ctz_b_end:
-    xor     t2, a0, a1
-    sltu    t3, a1, a0
-    sub     t3, zero, t3
-    and     t2, t2, t3 # t2 = mask
-    xor     t3, a1, t2 # t3 = temp
-    xor     a0, a0, t2
-    sub     a1, t3, a0
+    bgeu    a1, a0, gcd_ordered
+    mv      t2, a0
+    mv      a0, a1
+    mv      a1, t2
 
+gcd_ordered:
+    sub     a1, a1, a0
     bnez    a1, loop
 
     sll     a0, a0, t0
