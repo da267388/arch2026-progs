@@ -46,10 +46,8 @@ op2_asm:
     .align  2
 op3_asm:
     and     t0, a0, a1
-    andi    t0, t0, 1
+    xor     a0, a0, a1
     srli    a0, a0, 1
-    srli    a1, a1, 1
-    add     a0, a0, a1
     add     a0, a0, t0
     ret
     .size   op3_asm, .-op3_asm
@@ -69,120 +67,404 @@ q_mul_asm:
     # a6 = b_high
     srli    a6, a1, 16
 
-    # a7 = low_product
-    # multi_p00 (a7) (a3, a5)
-    add     t0, a3, zero
-    add     t1, a5, zero
+    # a7 = p00; t4 = p10
+    # multiply_pair_u16 (a3, a4, a5) (a7, t4)
     li      a7, 0
-    beqz    t1, .Lmul_done_p00
+    li      t4, 0
+    beqz    a5, mul_done_b_low
+    add     t0, a3, zero
+    add     t1, a4, zero
 
-.Lmul_loop_p00:
-    andi    t2, t1, 1
-    beqz    t2, .Lmul_skip_p00
+mul_loop_b_low_1:
+    andi    t2, a5, 1
+    srli    a5, a5, 1
+    beqz    t2, mul_skip_b_low_1
     add     a7, a7, t0
-
-.Lmul_skip_p00:
+    add     t4, t4, t1
+    beqz    a5, mul_done_b_low
+mul_skip_b_low_1:
     slli    t0, t0, 1
-    srli    t1, t1, 1
-    bnez    t1, .Lmul_loop_p00
+    slli    t1, t1, 1
 
-.Lmul_done_p00:
+mul_loop_b_low_2:
+    andi    t2, a5, 1
+    srli    a5, a5, 1
+    beqz    t2, mul_skip_b_low_2
+    add     a7, a7, t0
+    add     t4, t4, t1
+    beqz    a5, mul_done_b_low
+mul_skip_b_low_2:
+    slli    t0, t0, 1
+    slli    t1, t1, 1
+
+mul_loop_b_low_3:
+    andi    t2, a5, 1
+    srli    a5, a5, 1
+    beqz    t2, mul_skip_b_low_3
+    add     a7, a7, t0
+    add     t4, t4, t1
+    beqz    a5, mul_done_b_low
+mul_skip_b_low_3:
+    slli    t0, t0, 1
+    slli    t1, t1, 1
+
+mul_loop_b_low_4:
+    andi    t2, a5, 1
+    srli    a5, a5, 1
+    beqz    t2, mul_skip_b_low_4
+    add     a7, a7, t0
+    add     t4, t4, t1
+    beqz    a5, mul_done_b_low
+mul_skip_b_low_4:
+    slli    t0, t0, 1
+    slli    t1, t1, 1
+
+mul_loop_b_low_5:
+    andi    t2, a5, 1
+    srli    a5, a5, 1
+    beqz    t2, mul_skip_b_low_5
+    add     a7, a7, t0
+    add     t4, t4, t1
+    beqz    a5, mul_done_b_low
+mul_skip_b_low_5:
+    slli    t0, t0, 1
+    slli    t1, t1, 1
+
+mul_loop_b_low_6:
+    andi    t2, a5, 1
+    srli    a5, a5, 1
+    beqz    t2, mul_skip_b_low_6
+    add     a7, a7, t0
+    add     t4, t4, t1
+    beqz    a5, mul_done_b_low
+mul_skip_b_low_6:
+    slli    t0, t0, 1
+    slli    t1, t1, 1
+
+mul_loop_b_low_7:
+    andi    t2, a5, 1
+    srli    a5, a5, 1
+    beqz    t2, mul_skip_b_low_7
+    add     a7, a7, t0
+    add     t4, t4, t1
+    beqz    a5, mul_done_b_low
+mul_skip_b_low_7:
+    slli    t0, t0, 1
+    slli    t1, t1, 1
+
+mul_loop_b_low_8:
+    andi    t2, a5, 1
+    srli    a5, a5, 1
+    beqz    t2, mul_skip_b_low_8
+    add     a7, a7, t0
+    add     t4, t4, t1
+    beqz    a5, mul_done_b_low
+mul_skip_b_low_8:
+    slli    t0, t0, 1
+    slli    t1, t1, 1
+
+mul_loop_b_low_9:
+    andi    t2, a5, 1
+    srli    a5, a5, 1
+    beqz    t2, mul_skip_b_low_9
+    add     a7, a7, t0
+    add     t4, t4, t1
+    beqz    a5, mul_done_b_low
+mul_skip_b_low_9:
+    slli    t0, t0, 1
+    slli    t1, t1, 1
+
+mul_loop_b_low_10:
+    andi    t2, a5, 1
+    srli    a5, a5, 1
+    beqz    t2, mul_skip_b_low_10
+    add     a7, a7, t0
+    add     t4, t4, t1
+    beqz    a5, mul_done_b_low
+mul_skip_b_low_10:
+    slli    t0, t0, 1
+    slli    t1, t1, 1
+
+mul_loop_b_low_11:
+    andi    t2, a5, 1
+    srli    a5, a5, 1
+    beqz    t2, mul_skip_b_low_11
+    add     a7, a7, t0
+    add     t4, t4, t1
+    beqz    a5, mul_done_b_low
+mul_skip_b_low_11:
+    slli    t0, t0, 1
+    slli    t1, t1, 1
+
+mul_loop_b_low_12:
+    andi    t2, a5, 1
+    srli    a5, a5, 1
+    beqz    t2, mul_skip_b_low_12
+    add     a7, a7, t0
+    add     t4, t4, t1
+    beqz    a5, mul_done_b_low
+mul_skip_b_low_12:
+    slli    t0, t0, 1
+    slli    t1, t1, 1
+
+mul_loop_b_low_13:
+    andi    t2, a5, 1
+    srli    a5, a5, 1
+    beqz    t2, mul_skip_b_low_13
+    add     a7, a7, t0
+    add     t4, t4, t1
+    beqz    a5, mul_done_b_low
+mul_skip_b_low_13:
+    slli    t0, t0, 1
+    slli    t1, t1, 1
+
+mul_loop_b_low_14:
+    andi    t2, a5, 1
+    srli    a5, a5, 1
+    beqz    t2, mul_skip_b_low_14
+    add     a7, a7, t0
+    add     t4, t4, t1
+    beqz    a5, mul_done_b_low
+mul_skip_b_low_14:
+    slli    t0, t0, 1
+    slli    t1, t1, 1
+
+mul_loop_b_low_15:
+    andi    t2, a5, 1
+    srli    a5, a5, 1
+    beqz    t2, mul_skip_b_low_15
+    add     a7, a7, t0
+    add     t4, t4, t1
+    beqz    a5, mul_done_b_low
+mul_skip_b_low_15:
+    slli    t0, t0, 1
+    slli    t1, t1, 1
+
+    # cause not branch to done 
+    add     a7, a7, t0
+    add     t4, t4, t1
+
+mul_done_b_low:
 
     # t4 = middle
-    # multi_p10 (t4) (a4, a5)
-    add     t0, a4, zero
-    add     t1, a5, zero
-    li      t4, 0
-    beqz    t1, .Lmul_done_p10
+    srli    a5, a7, 16
+    add     t4, t4, a5
 
-.Lmul_loop_p10:
-    andi    t2, t1, 1
-    beqz    t2, .Lmul_skip_p10
-    add     t4, t4, t0
+    # t6 = p10; a5 = p11
+    # multiply_pair_u16 (a3, a4, a6) (t6, a5)
+    li      t6, 0
+    li      a5, 0
+    beqz    a6, mul_done_b_high
 
-.Lmul_skip_p10:
-    slli    t0, t0, 1
-    srli    t1, t1, 1
-    bnez    t1, .Lmul_loop_p10
+mul_loop_b_high_1:
+    andi    t2, a6, 1
+    srli    a6, a6, 1
+    beqz    t2, mul_skip_b_high_1
+    add     t6, t6, a3
+    add     a5, a5, a4
+    beqz    a6, mul_done_b_high
+mul_skip_b_high_1:
+    slli    a3, a3, 1
+    slli    a4, a4, 1
 
-.Lmul_done_p10:
-    srli    t6, a7, 16
-    add     t4, t4, t6
+mul_loop_b_high_2:
+    andi    t2, a6, 1
+    srli    a6, a6, 1
+    beqz    t2, mul_skip_b_high_2
+    add     t6, t6, a3
+    add     a5, a5, a4
+    beqz    a6, mul_done_b_high
+mul_skip_b_high_2:
+    slli    a3, a3, 1
+    slli    a4, a4, 1
+
+mul_loop_b_high_3:
+    andi    t2, a6, 1
+    srli    a6, a6, 1
+    beqz    t2, mul_skip_b_high_3
+    add     t6, t6, a3
+    add     a5, a5, a4
+    beqz    a6, mul_done_b_high
+mul_skip_b_high_3:
+    slli    a3, a3, 1
+    slli    a4, a4, 1
+
+mul_loop_b_high_4:
+    andi    t2, a6, 1
+    srli    a6, a6, 1
+    beqz    t2, mul_skip_b_high_4
+    add     t6, t6, a3
+    add     a5, a5, a4
+    beqz    a6, mul_done_b_high
+mul_skip_b_high_4:
+    slli    a3, a3, 1
+    slli    a4, a4, 1
+
+mul_loop_b_high_5:
+    andi    t2, a6, 1
+    srli    a6, a6, 1
+    beqz    t2, mul_skip_b_high_5
+    add     t6, t6, a3
+    add     a5, a5, a4
+    beqz    a6, mul_done_b_high
+mul_skip_b_high_5:
+    slli    a3, a3, 1
+    slli    a4, a4, 1
+
+mul_loop_b_high_6:
+    andi    t2, a6, 1
+    srli    a6, a6, 1
+    beqz    t2, mul_skip_b_high_6
+    add     t6, t6, a3
+    add     a5, a5, a4
+    beqz    a6, mul_done_b_high
+mul_skip_b_high_6:
+    slli    a3, a3, 1
+    slli    a4, a4, 1
+
+mul_loop_b_high_7:
+    andi    t2, a6, 1
+    srli    a6, a6, 1
+    beqz    t2, mul_skip_b_high_7
+    add     t6, t6, a3
+    add     a5, a5, a4
+    beqz    a6, mul_done_b_high
+mul_skip_b_high_7:
+    slli    a3, a3, 1
+    slli    a4, a4, 1
+
+mul_loop_b_high_8:
+    andi    t2, a6, 1
+    srli    a6, a6, 1
+    beqz    t2, mul_skip_b_high_8
+    add     t6, t6, a3
+    add     a5, a5, a4
+    beqz    a6, mul_done_b_high
+mul_skip_b_high_8:
+    slli    a3, a3, 1
+    slli    a4, a4, 1
+
+mul_loop_b_high_9:
+    andi    t2, a6, 1
+    srli    a6, a6, 1
+    beqz    t2, mul_skip_b_high_9
+    add     t6, t6, a3
+    add     a5, a5, a4
+    beqz    a6, mul_done_b_high
+mul_skip_b_high_9:
+    slli    a3, a3, 1
+    slli    a4, a4, 1
+
+mul_loop_b_high_10:
+    andi    t2, a6, 1
+    srli    a6, a6, 1
+    beqz    t2, mul_skip_b_high_10
+    add     t6, t6, a3
+    add     a5, a5, a4
+    beqz    a6, mul_done_b_high
+mul_skip_b_high_10:
+    slli    a3, a3, 1
+    slli    a4, a4, 1
+
+mul_loop_b_high_11:
+    andi    t2, a6, 1
+    srli    a6, a6, 1
+    beqz    t2, mul_skip_b_high_11
+    add     t6, t6, a3
+    add     a5, a5, a4
+    beqz    a6, mul_done_b_high
+mul_skip_b_high_11:
+    slli    a3, a3, 1
+    slli    a4, a4, 1
+
+mul_loop_b_high_12:
+    andi    t2, a6, 1
+    srli    a6, a6, 1
+    beqz    t2, mul_skip_b_high_12
+    add     t6, t6, a3
+    add     a5, a5, a4
+    beqz    a6, mul_done_b_high
+mul_skip_b_high_12:
+    slli    a3, a3, 1
+    slli    a4, a4, 1
+
+mul_loop_b_high_13:
+    andi    t2, a6, 1
+    srli    a6, a6, 1
+    beqz    t2, mul_skip_b_high_13
+    add     t6, t6, a3
+    add     a5, a5, a4
+    beqz    a6, mul_done_b_high
+mul_skip_b_high_13:
+    slli    a3, a3, 1
+    slli    a4, a4, 1
+
+mul_loop_b_high_14:
+    andi    t2, a6, 1
+    srli    a6, a6, 1
+    beqz    t2, mul_skip_b_high_14
+    add     t6, t6, a3
+    add     a5, a5, a4
+    beqz    a6, mul_done_b_high
+mul_skip_b_high_14:
+    slli    a3, a3, 1
+    slli    a4, a4, 1
+
+mul_loop_b_high_15:
+    andi    t2, a6, 1
+    srli    a6, a6, 1
+    beqz    t2, mul_skip_b_high_15
+    add     t6, t6, a3
+    add     a5, a5, a4
+    beqz    a6, mul_done_b_high
+mul_skip_b_high_15:
+    slli    a3, a3, 1
+    slli    a4, a4, 1
+
+    # cause not branch to done 
+    add     t6, t6, a3
+    add     a5, a5, a4
+
+mul_done_b_high:
 
     # t5 = middle_low
     and     t5, t4, a2
-    # multi_p01 (t6) (a3, a6)
-    add     t0, a3, zero
-    add     t1, a6, zero
-    li      t6, 0
-    beqz    t1, .Lmul_done_p01
-
-.Lmul_loop_p01:
-    andi    t2, t1, 1
-    beqz    t2, .Lmul_skip_p01
-    add     t6, t6, t0
-
-.Lmul_skip_p01:
-    slli    t0, t0, 1
-    srli    t1, t1, 1
-    bnez    t1, .Lmul_loop_p01
-
-.Lmul_done_p01:
     add     t5, t5, t6
 
     # a2 = low
+    slli    a3, t5, 16
     and     a2, a7, a2
-    slli    t6, t5, 16
-    or      a2, a2, t6
+    or      a2, a2, a3
 
-    # t4 = middle_high
-    srli    t4, t4, 16
-    
-    srli    t5, t5, 16
+    # a5 = high
+    srli    a3, t4, 16
+    add     a5, a5, a3
+    srli    a3, t5, 16
+    add     a5, a5, a3
 
-    # a3 = high
-    # multi_p11 (a3) (a4, a6)
-    add     t0, a4, zero
-    add     t1, a6, zero
-    li      a3, 0
-    beqz    t1, .Lmul_done_p11
-
-.Lmul_loop_p11:
-    andi    t2, t1, 1
-    beqz    t2, .Lmul_skip_p11
-    add     a3, a3, t0
-
-.Lmul_skip_p11:
-    slli    t0, t0, 1
-    srli    t1, t1, 1
-    bnez    t1, .Lmul_loop_p11
-
-.Lmul_done_p11:
-    add     t4, t4, t5
-    add     a3, a3, t4
 
     # Convert the unsigned product to the signed product bit pattern
-    slt     t0, a0, zero
-    sub     t0, zero, t0
+    srai    t0, a0, 31
     and     t0, t0, a1
-    sub     a3, a3, t0
+    sub     a5, a5, t0
 
-    slt     t0, a1, zero
-    sub     t0, zero, t0
+    srai    t0, a1, 31
     and     t0, t0, a0
-    sub     a3, a3, t0
+    sub     a5, a5, t0
 
-    # s2 = old_low
+    # different from c, due to the data types and Cppcheck don't accept comparison base on overflow
+    # t0 = old_low
     add     t0, a2, zero
     li      t1, 0x80000
     add     a2, a2, t1
     sltu    t0, a2, t0
-    add     a3, a3, t0
+    add     a5, a5, t0
 
     # s2 = result
     srli    a2, a2, 20
-    slli    a3, a3, 12
-    or      a0, a2, a3
+    slli    a5, a5, 12
+    or      a0, a2, a5
 
     ret
     .size   q_mul_asm, .-q_mul_asm
+    
