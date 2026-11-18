@@ -467,4 +467,3 @@ mul_done_b_high:
 
     ret
     .size   q_mul_asm, .-q_mul_asm
-    
