@@ -166,8 +166,7 @@ mult_exit:
     add     t3, t3, t4
     addi    t3, t3, -127
 
-    sltu    a4, t5, t0
-    xori    a4, a4, 1
+    srli    a4, t5, 15
     srl     t5, t5, a4
     add     t3, t3, a4
 
@@ -234,8 +233,7 @@ bf16_sqrt_asm:
 
     bltu    t1, a1, return_a
     beqz    a1, return_0
-    addi    t0, t0, 1 # t0 = 0x8000
-    and     a4, a0, t0
+    srli    a4, a0, 15
     bnez    a4, sqrt_return_nan
     beq     a1, t1, return_a # return_inf
 
@@ -266,85 +264,69 @@ bf16_sqrt_asm:
     li      t0, 0x1000
     add     t4, t2, t0
     srli    t2, t2, 1
-    # t3 = mask
-    sltu    t3, t1, t4
-    addi    t3, t3, -1
-    and     t5, t4, t3
-    sub     t1, t1, t5
-    and     t5, t0, t3
-    add     t2, t2, t5
+
+    bltu    t1, t4, sqrt_skip_12
+    sub     t1, t1, t4
+    add     t2, t2, t0
+sqrt_skip_12:
 
     # SQRT_STEP(1u << 10)
     # t4 = trial
-    addi     t4, t2, 0x400
+    addi    t4, t2, 0x400
     srli    t2, t2, 1
-    # t3 = mask
-    sltu    t3, t1, t4
-    addi    t3, t3, -1
-    and     t5, t4, t3
-    sub     t1, t1, t5
-    andi     t5, t3, 0x400
-    add     t2, t2, t5
+
+    bltu    t1, t4, sqrt_skip_10
+    sub     t1, t1, t4
+    addi    t2, t2, 0x400
+sqrt_skip_10:
 
     # SQRT_STEP(1u << 8)
     # t4 = trial
-    addi     t4, t2, 0x100
+    addi    t4, t2, 0x100
     srli    t2, t2, 1
-    # t3 = mask
-    sltu    t3, t1, t4
-    addi    t3, t3, -1
-    and     t5, t4, t3
-    sub     t1, t1, t5
-    andi     t5, t3, 0x100
-    add     t2, t2, t5
+
+    bltu    t1, t4, sqrt_skip_8
+    sub     t1, t1, t4
+    addi    t2, t2, 0x100
+sqrt_skip_8:
 
     # SQRT_STEP(1u << 6)
     # t4 = trial
-    addi     t4, t2, 0x40
+    addi    t4, t2, 0x40
     srli    t2, t2, 1
-    # t3 = mask
-    sltu    t3, t1, t4
-    addi    t3, t3, -1
-    and     t5, t4, t3
-    sub     t1, t1, t5
-    andi     t5, t3, 0x40
-    add     t2, t2, t5
+
+    bltu    t1, t4, sqrt_skip_6
+    sub     t1, t1, t4
+    addi    t2, t2, 0x40
+sqrt_skip_6:
 
     # SQRT_STEP(1u << 4)
     # t4 = trial
-    addi     t4, t2, 0x10
+    addi    t4, t2, 0x10
     srli    t2, t2, 1
-    # t3 = mask
-    sltu    t3, t1, t4
-    addi    t3, t3, -1
-    and     t5, t4, t3
-    sub     t1, t1, t5
-    andi     t5, t3, 0x10
-    add     t2, t2, t5
+
+    bltu    t1, t4, sqrt_skip_4
+    sub     t1, t1, t4
+    addi    t2, t2, 0x10
+sqrt_skip_4:
 
     # SQRT_STEP(1u << 2)
     # t4 = trial
-    addi     t4, t2, 0x4
+    addi    t4, t2, 0x4
     srli    t2, t2, 1
-    # t3 = mask
-    sltu    t3, t1, t4
-    addi    t3, t3, -1
-    and     t5, t4, t3
-    sub     t1, t1, t5
-    andi     t5, t3, 0x4
-    add     t2, t2, t5
+
+    bltu    t1, t4, sqrt_skip_2
+    sub     t1, t1, t4
+    addi    t2, t2, 0x4
+sqrt_skip_2:
 
     # SQRT_STEP(1u << 0)
     # t4 = trial
-    addi     t4, t2, 0x1
+    addi    t4, t2, 1
     srli    t2, t2, 1
-    # t3 = mask
-    sltu    t3, t1, t4
-    addi    t3, t3, -1
-    and     t5, t4, t3
-    sub     t1, t1, t5
-    andi     t5, t3, 0x1
-    add     t2, t2, t5
+    bltu    t1, t4, sqrt_last_done
+    addi    t2, t2, 1
+sqrt_last_done:
 
     # a5 = result_exp
     addi    a5, a2, 127

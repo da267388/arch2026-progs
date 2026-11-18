@@ -81,11 +81,9 @@ static inline uint32_t multiply_significands(uint32_t a, uint32_t b)
         product += a;
 
     // bit 6
-    if (!(b >>= 1))
+    if (!(b >> 1))
         return product;
-    a <<= 1;
-    if (b & 1u)
-        product += a;
+    product += a << 1;
 
     return product;
 }
@@ -118,9 +116,10 @@ uint16_t bf16_mul(uint16_t a, uint16_t b)
     uint32_t product = multiply_significands(sig_a, sig_b);
     int exponent = exp_a + exp_b - 127;
 
-    if (product >= 0x8000u) {
-        product >>= 1;
-        ++exponent;
+    uint32_t adjust = product >> 15;
+    if (adjust) {
+        product >>= adjust;
+        exponent += (int) adjust;
     }
 
     uint32_t fraction = (product >> 7) & 0x7Fu;
@@ -150,9 +149,10 @@ static inline uint32_t sqrt_significand(uint32_t m)
         /* remainder < trial RV32I sltu */        \
         /* (1)，1 - 1 = 0x00000000 (no update) */ \
         /* (0)，0 - 1 = 0xFFFFFFFF (update) */    \
-        uint32_t mask = (remainder < trial) - 1u; \
-        remainder -= trial & mask;                \
-        partial += (bit) & mask;                  \
+        if (remainder >= trial) {                 \
+            remainder -= trial;                   \
+            partial += (bit);                     \
+        }                                         \
     } while (0)
 
     /* unroll */
@@ -162,7 +162,8 @@ static inline uint32_t sqrt_significand(uint32_t m)
     SQRT_STEP(1u << 6);
     SQRT_STEP(1u << 4);
     SQRT_STEP(1u << 2);
-    SQRT_STEP(1u << 0);
+    uint32_t trial = partial + 1u;
+    partial = (partial >> 1) + (uint32_t) (remainder >= trial);
 
 #undef SQRT_STEP
     return partial;
